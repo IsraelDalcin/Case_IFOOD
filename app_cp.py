@@ -18,7 +18,8 @@ import os
 def interpretar_threshold(comando_usuario):
     prompt = f"Extraia apenas o valor numérico do threshold (entre 0 e 1) baseado no comando: '{comando_usuario}'."
     try:
-        client = OpenAI(api_key="")
+        token = st.secrets["gpt_token"]
+        client = OpenAI(api_key=token)
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -456,7 +457,7 @@ else:
                     st.success(f"{msg}: {treshold}")
                 else:
                     st.warning(f"{msg}: {treshold}")
-                    
+
             prob_true = st.session_state["prob_true"]
 
             # Slider agora usa key para ler/escrever direto no session_state
