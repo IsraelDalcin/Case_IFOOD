@@ -466,7 +466,7 @@ else:
                 min_value=0.0,
                 max_value=1.0,
                 step=0.05,
-                value=st.session_state["threshold"]
+                value=treshold
             )
 
             pred_label = "Sim" if prob_true >= threshold else "Não"
