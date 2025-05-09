@@ -298,5 +298,178 @@ if database == 'CSV':
         st.warning('Arquivo CSV não foi carregado.')
 
 else:
-    st.error('Esta opção será desenvolvida no Checkpoint #2 da disciplina.')
+    st.header("Simulação online")
+    st.write("Preencha todos os campos para visualizar a previsão do modelo para um cliente específico")
+    with st.expander("Formulário para a previsão", expanded=True): 
+        AcceptedCmp1 = st.selectbox(
+            "Aceitou campanha 1", [None, 0, 1],
+            format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+            key="AcceptedCmp1"
+        )
+        AcceptedCmp2 = st.selectbox("Aceitou campanha 2", [None, 0, 1],
+                                   format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+                                   key="AcceptedCmp2")
+        AcceptedCmp3 = st.selectbox("Aceitou campanha 3", [None, 0, 1],
+                                   format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+                                   key="AcceptedCmp3")
+        AcceptedCmp4 = st.selectbox("Aceitou campanha 4", [None, 0, 1],
+                                   format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+                                   key="AcceptedCmp4")
+        AcceptedCmp5 = st.selectbox("Aceitou campanha 5", [None, 0, 1],
+                                   format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+                                   key="AcceptedCmp5")
+        Complain = st.selectbox("Reclamação", [None, 0, 1],
+                                format_func=lambda x: "Selecione…" if x is None else ("Sim" if x == 1 else "Não"),
+                                key="Complain")
+        age_str = st.text_input("Idade", "", key="Age")
+        education = st.selectbox(
+            "Escolaridade",
+            [None, 1, 2, 3, 4, 5],
+            format_func=lambda x: {
+                None: "Selecione…",
+                1: "Basic",
+                2: "2n Cycle",
+                3: "Graduation",
+                4: "Master",
+                5: "PhD"
+            }.get(x, "Selecione…"),
+            key="Education"
+        )
+        # Opções do status marital
+        marital_options = {
+            "Divorced": "Marital_Status_Divorced",
+            "Married": "Marital_Status_Married",
+            "Single": "Marital_Status_Single",
+            "Together": "Marital_Status_Together",
+            "Widow": "Marital_Status_Widow"
+        }
+
+        # Campo de seleção único
+        marital_choice = st.selectbox("Estado Civil", list(marital_options.keys()))
+
+        # Cria as colunas one-hot com True para a escolhida e False para as demais
+        marital_status_encoded = {
+            column: (column == marital_options[marital_choice])
+            for column in marital_options.values()
+        }
+        kidhome_str = st.text_input("Filhos em Casa", "", key="Kidhome")
+        teenhome_str = st.text_input("Adolescentes em Casa", "", key="Teenhome")
+        income_str = st.text_input("Renda (R$)", "", key="Income")
+        fish_str = st.text_input("Gasto em Peixes", "", key="MntFishProducts")
+        fruits_str = st.text_input("Gasto em Frutas", "", key="MntFruits")
+        gold_str = st.text_input("Gasto em produtos de ouro", "", key="MntGoldProds")
+        meat_str = st.text_input("Gasto em Carnes", "", key="MntMeatProducts")
+        sweet_str = st.text_input("Gasto em Doces", "", key="MntSweetProducts")
+        wine_str = st.text_input("Gasto em Vinhos", "", key="MntWines")
+        cat_str = st.text_input("Compras por Catálogo", "", key="NumCatalogPurchases")
+        deals_str = st.text_input("Compras por Promoções", "", key="NumDealsPurchases")
+        store_str = st.text_input("Compras na Loja Física", "", key="NumStorePurchases")
+        web_str = st.text_input("Compras Online", "", key="NumWebPurchases")
+        visits_str = st.text_input("Visitas ao Site no mês", "", key="NumWebVisitsMonth")
+        recency_str = st.text_input("Dias desde a última Compra", "", key="Recency")
+        time_str = st.text_input("Tempo como cliente (anos)", "", key="Time_Customer")
+
+    if st.button("Prever o resultado"):
+        try:
+            # Cria o dicionário base com os campos preenchidos
+            inputs = {
+                "AcceptedCmp1": st.session_state["AcceptedCmp1"],
+                "AcceptedCmp2": st.session_state["AcceptedCmp2"],
+                "AcceptedCmp3": st.session_state["AcceptedCmp3"],
+                "AcceptedCmp4": st.session_state["AcceptedCmp4"],
+                "AcceptedCmp5": st.session_state["AcceptedCmp5"],
+                "Complain": st.session_state["Complain"],
+                "Age": age_str,
+                "Education": st.session_state["Education"],
+                "Kidhome": kidhome_str,
+                "Teenhome": teenhome_str,
+                "Income": income_str,
+                "MntFishProducts": fish_str,
+                "MntFruits": fruits_str,
+                "MntGoldProds": gold_str,
+                "MntMeatProducts": meat_str,
+                "MntSweetProducts": sweet_str,
+                "MntWines": wine_str,
+                "NumCatalogPurchases": cat_str,
+                "NumDealsPurchases": deals_str,
+                "NumStorePurchases": store_str,
+                "NumWebPurchases": web_str,
+                "NumWebVisitsMonth": visits_str,
+                "Recency": recency_str,
+                "Time_Customer": time_str,
+            }
+
+            # Verifica se há campos não preenchidos
+            if any(v in (None, "") for v in inputs.values()):
+                st.error("Por favor, preencha **TODOS** os campos antes de rodar.")
+            else:
+                # Converte os tipos e junta com as colunas one-hot de Marital Status
+                df_input = pd.DataFrame([{
+                    **{f: int(inputs[f]) for f in [
+                        "AcceptedCmp1", "AcceptedCmp2", "AcceptedCmp3", "AcceptedCmp4", "AcceptedCmp5", "Complain"
+                    ]},
+                    "Age": int(inputs["Age"]),
+                    "Kidhome": int(inputs["Kidhome"]),
+                    "Teenhome": int(inputs["Teenhome"]),
+                    "Income": float(inputs["Income"]),
+                    **{k: int(inputs[k]) for k in [
+                        "MntFishProducts", "MntFruits", "MntGoldProds", "MntMeatProducts", "MntSweetProducts", "MntWines"
+                    ]},
+                    **{k: int(inputs[k]) for k in [
+                        "NumCatalogPurchases", "NumDealsPurchases", "NumStorePurchases",
+                        "NumWebPurchases", "NumWebVisitsMonth", "Recency"
+                    ]},
+                    "Time_Customer": float(inputs["Time_Customer"]),
+                    "Education": inputs["Education"],
+                    **marital_status_encoded  # Adiciona as colunas booleanas one-hot
+                }])
+
+                with st.expander("CSV do usuário:", expanded=True):
+                    st.dataframe(df_input)
+
+                # Aqui você pode chamar o modelo
+                mdl_rf = load_model("./pickle/pickle_rf_pycaret2")
+                ypred = predict_model(mdl_rf, data=df_input, raw_score=True)
+                prob_true = float(ypred["prediction_score_1"][0])
+                st.session_state["prob_true"] = prob_true
+
+        except Exception as e:
+            st.error(f"Erro ao processar os dados: {e}")
+
+    
+    if "threshold" not in st.session_state:
+        st.session_state["threshold"] = 0.5
+        
+    if "prob_true" in st.session_state:
+        with st.expander("Resultado da Simulação", expanded=True):
+            # Campo de texto para comando
+            comando_usuario = st.text_input('Digite o comando para alterar o threshold (ex: "Aumente para 0.7"):',
+                                            '')
+
+            # Threshold inicial
+            treshold = 0.5
+
+            if comando_usuario:
+                msg, treshold, success = interpretar_threshold(comando_usuario)
+
+                if success:
+                    st.success(f"{msg}: {treshold}")
+                else:
+                    st.warning(f"{msg}: {treshold}")
+                    
+            prob_true = st.session_state["prob_true"]
+
+            # Slider agora usa key para ler/escrever direto no session_state
+            threshold = st.slider(
+                "Limiar de corte",
+                min_value=0.0,
+                max_value=1.0,
+                step=0.05,
+                value=st.session_state["threshold"]
+            )
+
+            pred_label = "Sim" if prob_true >= threshold else "Não"
+            st.metric("Probabilidade de Compra", f"{prob_true:.3f}")
+            st.write(f"Classificação: **{pred_label}**")
+
 
